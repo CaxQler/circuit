@@ -1,4 +1,4 @@
-/* CIRCUIT-V108 — camera + auto-retry + watchdog + mobile drawer fix */
+/* CIRCUIT-V111 — ultra-fast typewriter + smart direct answers */
 const $ = (id) => document.getElementById(id);
 const on = (id, ev, fn) => { const el = $(id); if (el) el.addEventListener(ev, fn); else warnMiss(id); };
 const click = (id, fn) => { const el = $(id); if (el) el.onclick = fn; else warnMiss(id); };
@@ -21,7 +21,6 @@ let thinking = localStorage.getItem("circuit_think") === "1";
 let webOn = false;
 let abortCtl = null;
 
-/* ⭐ Mobile drawer helpers */
 const closeDrawer = () => document.body.classList.remove("side-open");
 const isMobile = () => window.matchMedia("(max-width:760px)").matches;
 
@@ -265,7 +264,6 @@ function chatItem(c) {
   el.innerHTML = `<span class="t"></span><button class="dots">${I.more}</button>
     <div class="menu hidden"><button data-a="rename">${I.edit} Rename</button><button data-a="del">${I.trash} Delete</button></div>`;
   el.querySelector(".t").textContent = c.title;
-  /* ⭐ แตะแชทปุ๊บ → เข้าแชท + ปิด sidebar บนมือถือทันที */
   el.querySelector(".t").onclick = () => { currentId = c.id; renderSidebar(); renderMessages(); closeDrawer(); };
   const menu = el.querySelector(".menu");
   el.querySelector(".dots").onclick = (e) => { e.stopPropagation(); closeMenus(); menu.classList.remove("hidden"); };
@@ -296,7 +294,6 @@ function renderMessages(smooth = false) {
   scroll(smooth);
 }
 
-/* ⭐ รูปบนข้อความ + ชื่อรูป + โค้ดยาวเป็นการ์ดไฟล์ */
 function msgEl(m) {
   const d = document.createElement("div");
   d.className = "msg " + m.role;
@@ -379,7 +376,6 @@ function renderMD(el, text) {
   el.querySelectorAll("pre").forEach(pre => {
     if (pre.closest(".codewrap")) return;
     const code = pre.querySelector("code");
-    /* ⭐ Syntax highlighting (Lua/JS/Python มีสีสวย) */
     if (code && window.hljs) {
       try { hljs.highlightElement(code); } catch {}
     }
@@ -400,7 +396,7 @@ function renderMD(el, text) {
   });
 }
 
-/* ── AI rules: Main rules + Identity + User info ── */
+/* ── AI rules ── */
 function systemPrompt() {
   const name = cfg.aiName || "Circuit", company = cfg.company || "Bytelater";
   const mainRules = Array.isArray(cfg.rules) && cfg.rules.length ? cfg.rules : [
@@ -447,7 +443,6 @@ on("form", "submit", async (e) => {
   await run(chat);
 });
 
-/* ⭐ run: มี auto-retry 1 รอบ ถ้าโมเดลพัง/เงียบ — ผู้ใช้ไม่ต้องรีหน้า */
 async function run(chat) {
   busy = true; $("sendBtn").disabled = true;
   $("stopBtn").classList.remove("hidden"); $("sendBtn").classList.add("hidden");
@@ -466,12 +461,14 @@ async function run(chat) {
     } catch (err) {
       if (err.name === "AbortError") { lastErr = err; break; }
       lastErr = err;
-      if (attempt === 1) await sleep(1200);   /* รอแป๊บแล้วลองใหม่อัตโนมัติ */
+      if (attempt === 1) await sleep(500);   /* ⭐ รีไวขึ้น */
     }
   }
 
   if (full) {
-    renderMD(b, full);
+    shown_final: {
+      renderMD(b, full);
+    }
     chat.messages.push({ role: "assistant", text: full });
     chat.updatedAt = Date.now(); save(); renderSidebar(); updateUsage();
   } else if (lastErr?.name === "AbortError") {
@@ -487,7 +484,7 @@ async function run(chat) {
   scroll();
 }
 
-/* ⭐ streamChat: watchdog ตัดโมเดลนิ่ง + typewriter */
+/* ⭐ streamChat: typewriter ไวมาก (ไล่ตามสตรีมแบบเร่งสปีด ทีละตัวแต่พรืด) */
 async function streamChat(chat, bubble) {
   const recent = chat.messages.slice(-20);
   const msgs = [{ role: "system", content: systemPrompt() }];
@@ -498,7 +495,7 @@ async function streamChat(chat, bubble) {
   const last = msgs.at(-1);
   if (last?.role === "user" && Array.isArray(last.content) && last.content[0]) {
     last.content[0].text +=
-      "\n\n(ลืมไม่ได้: ตอบแบบเพื่อนสนุกๆ ตามภาษาผู้ใช้ ห้ามพูดถึงตัวเอง/ผู้สร้าง/ระบบภายใน เว้นแต่ถูกถาม ห้ามเริ่มด้วย Understood)";
+      "\n\n(ลืมไม่ได้: ตอบตรงประเด็น กระชับแต่ฉลาด ไม่ตอบยืดยาวเกินจำเป็น เว้นแต่ผู้ใช้ขอละเอียด ตอบตามภาษาผู้ใช้ ห้ามพูดถึงตัวเอง/ผู้สร้าง/ระบบภายใน เว้นแต่ถูกถาม ห้ามเริ่มด้วย Understood)";
   }
 
   abortCtl = new AbortController();
@@ -518,7 +515,6 @@ async function streamChat(chat, bubble) {
   let buf = "", raw = "", full = "", reasonBuf = "", shown = 0;
   let lastData = Date.now(), stalled = false;
 
-  /* ⭐ Watchdog: ถ้า 20 วิ ไม่มีข้อมูลไหลมาเลย → ตัดสตรีม */
   const watchdog = setInterval(() => {
     if (Date.now() - lastData > 20000) {
       stalled = true;
@@ -526,12 +522,13 @@ async function streamChat(chat, bubble) {
     }
   }, 3000);
 
+  /* ⭐ typewriter ไวมาก: ทุก 16ms ไล่ตามแบบทบต้น — เห็นพิมพ์ทีละตัวแต่ไม่มีวันล้าหลังสตรีม */
   const paintTimer = setInterval(() => {
     if (shown >= full.length) return;
-    shown = Math.min(full.length, shown + Math.max(4, Math.ceil((full.length - shown) / 12)));
+    shown = Math.min(full.length, shown + Math.max(16, Math.ceil((full.length - shown) / 5)));
     renderMD(bubble, full.slice(0, shown));
     if (nearBottom()) scroll();
-  }, 24);
+  }, 16);
 
   try {
     while (true) {
@@ -586,20 +583,18 @@ async function streamChat(chat, bubble) {
   if (!full || !full.trim()) full = reasonBuf;
   if (!full || !full.trim()) throw new Error("No response — try again.");
 
-  await new Promise(resolve => {
-    const flush = setInterval(() => {
-      if (shown >= full.length) { clearInterval(flush); resolve(); }
-      else {
-        shown = Math.min(full.length, shown + 80);
-        renderMD(bubble, full.slice(0, shown));
-        if (nearBottom()) scroll();
-      }
-    }, 16);
-  });
+  /* ⭐ ช่วงปิดจบ: ไล่ตัวอักษรที่เหลือแบบพรืดเดียวจบ (ยังเห็นเป็นการพิมพ์) */
+  while (shown < full.length) {
+    shown = Math.min(full.length, shown + Math.max(30, Math.ceil((full.length - shown) / 3)));
+    renderMD(bubble, full.slice(0, shown));
+    if (nearBottom()) scroll();
+    await sleep(10);
+  }
+  renderMD(bubble, full);
   return full;
 }
 
-/* ── Attachments: รูป/ไฟล์/กล้อง + การ์ดแบบ AI จริง ── */
+/* ── Attachments ── */
 function shrink(file, max = 1024) {
   return new Promise((res, rej) => {
     const img = new Image();
@@ -631,14 +626,12 @@ on("fileInput", "change", async (e) => {
   e.target.value = "";
 });
 
-/* ⭐ ถ่ายรูปสด (มือถือเปิดกล้องหลัง) */
 on("cameraInput", "change", async (e) => {
   const f = e.target.files[0];
   if (f) await addImageFile(f);
   e.target.value = "";
 });
 
-/* ⭐ วางรูปจากคลิปบอร์ด (Ctrl+V) */
 on("input", "paste", async (e) => {
   const items = e.clipboardData?.items || [];
   for (const it of items) {
@@ -679,7 +672,7 @@ function renderPreview() {
   });
 }
 
-/* ── Settings (3 tabs) ── */
+/* ── Settings ── */
 const stab = (on_) => {
   $("stabAcc").classList.toggle("on", on_ === "acc");
   $("stabPrem").classList.toggle("on", on_ === "prem");
@@ -803,7 +796,7 @@ document.querySelectorAll(".set-sub button").forEach(b => {
   };
 });
 
-/* ── Plus menu: Thinking / Web Search ── */
+/* ── Plus menu ── */
 function paintModes() {
   const t = document.querySelector("#mThink");
   const w = document.querySelector("#mWeb");
@@ -829,11 +822,9 @@ click("mWeb", () => {
 });
 paintModes();
 
-/* ── Attach / Camera buttons ── */
+/* ── Attach / Camera / Stop ── */
 click("attachBtn", () => $("fileInput").click());
 click("cameraBtn", () => $("cameraInput").click());
-
-/* ── Stop button ── */
 click("stopBtn", () => {
   if (abortCtl) abortCtl.abort();
 });
@@ -842,12 +833,10 @@ click("stopBtn", () => {
 on("input", "input", function () {
   this.style.height = "auto"; this.style.height = Math.min(this.scrollHeight, 200) + "px";
 });
-/* ⭐ อ่านค่าตั้งค่า Send on Enter จริง ๆ */
 on("input", "keydown", (e) => {
   const g = JSON.parse(localStorage.getItem(K_GEN) || "{}");
   if (e.key === "Enter" && !e.shiftKey && g.enter !== "0") { e.preventDefault(); $("form").requestSubmit(); }
 });
-/* ⭐ มือถือ: ดันแชทขึ้นเมื่อคีย์บอร์ดเด้งขึ้น (iOS) */
 on("input", "focus", () => setTimeout(() => scroll(true), 350));
 if (window.visualViewport) {
   window.visualViewport.addEventListener("resize", () => {
@@ -858,18 +847,19 @@ if (window.visualViewport) {
 click("newChatBtn", () => { newChat(); closeDrawer(); });
 click("agentBtn", () => toast("Agent mode coming soon"));
 
-/* ⭐ ปุ่ม ☰: มือถือ = เปิด/ปิด drawer, เดสก์ท็อป = ซ่อน sidebar */
 click("menuBtn", () => {
   if (isMobile()) document.body.classList.toggle("side-open");
   else document.body.classList.toggle("side-hidden");
 });
-
-/* ⭐ แตะนอก sidebar = ปิด drawer */
 document.addEventListener("click", (e) => {
   if (document.body.classList.contains("side-open") &&
       !e.target.closest("#sidebar") && !e.target.closest("#menuBtn")) {
     document.body.classList.remove("side-open");
   }
+});
+window.addEventListener("resize", () => {
+  document.body.classList.remove("side-open");
+  document.body.classList.remove("side-hidden");
 });
 
 click("shareBtn", async () => {
