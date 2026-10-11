@@ -1,4 +1,4 @@
-/* CIRCUIT-V107 — camera + auto-retry + watchdog + mobile */
+/* CIRCUIT-V108 — camera + auto-retry + watchdog + mobile drawer fix */
 const $ = (id) => document.getElementById(id);
 const on = (id, ev, fn) => { const el = $(id); if (el) el.addEventListener(ev, fn); else warnMiss(id); };
 const click = (id, fn) => { const el = $(id); if (el) el.onclick = fn; else warnMiss(id); };
@@ -20,6 +20,10 @@ let custom = { bg: "#111317", panel: "#181b21", ac: "#9aa3b2" };
 let thinking = localStorage.getItem("circuit_think") === "1";
 let webOn = false;
 let abortCtl = null;
+
+/* ⭐ Mobile drawer helpers */
+const closeDrawer = () => document.body.classList.remove("side-open");
+const isMobile = () => window.matchMedia("(max-width:760px)").matches;
 
 const I = {
   file: `<svg viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7"/></svg>`,
@@ -261,7 +265,8 @@ function chatItem(c) {
   el.innerHTML = `<span class="t"></span><button class="dots">${I.more}</button>
     <div class="menu hidden"><button data-a="rename">${I.edit} Rename</button><button data-a="del">${I.trash} Delete</button></div>`;
   el.querySelector(".t").textContent = c.title;
-  el.querySelector(".t").onclick = () => { currentId = c.id; renderSidebar(); renderMessages(); };
+  /* ⭐ แตะแชทปุ๊บ → เข้าแชท + ปิด sidebar บนมือถือทันที */
+  el.querySelector(".t").onclick = () => { currentId = c.id; renderSidebar(); renderMessages(); closeDrawer(); };
   const menu = el.querySelector(".menu");
   el.querySelector(".dots").onclick = (e) => { e.stopPropagation(); closeMenus(); menu.classList.remove("hidden"); };
   menu.querySelector('[data-a="rename"]').onclick = () => {
@@ -837,15 +842,29 @@ click("stopBtn", () => {
 on("input", "input", function () {
   this.style.height = "auto"; this.style.height = Math.min(this.scrollHeight, 200) + "px";
 });
+/* ⭐ อ่านค่าตั้งค่า Send on Enter จริง ๆ */
 on("input", "keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("form").requestSubmit(); }
+  const g = JSON.parse(localStorage.getItem(K_GEN) || "{}");
+  if (e.key === "Enter" && !e.shiftKey && g.enter !== "0") { e.preventDefault(); $("form").requestSubmit(); }
 });
-click("newChatBtn", () => newChat());
+/* ⭐ มือถือ: ดันแชทขึ้นเมื่อคีย์บอร์ดเด้งขึ้น (iOS) */
+on("input", "focus", () => setTimeout(() => scroll(true), 350));
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", () => {
+    if (document.activeElement === $("input")) scroll(true);
+  });
+}
+
+click("newChatBtn", () => { newChat(); closeDrawer(); });
 click("agentBtn", () => toast("Agent mode coming soon"));
+
+/* ⭐ ปุ่ม ☰: มือถือ = เปิด/ปิด drawer, เดสก์ท็อป = ซ่อน sidebar */
 click("menuBtn", () => {
-  document.body.classList.toggle("side-open");    /* มือถือ */
-  document.body.classList.toggle("side-hidden");  /* เดสก์ท็อป */
+  if (isMobile()) document.body.classList.toggle("side-open");
+  else document.body.classList.toggle("side-hidden");
 });
+
+/* ⭐ แตะนอก sidebar = ปิด drawer */
 document.addEventListener("click", (e) => {
   if (document.body.classList.contains("side-open") &&
       !e.target.closest("#sidebar") && !e.target.closest("#menuBtn")) {
