@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Circuit</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
-  <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/highlightjs-lua@1.0.0/lua.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+<title>Circuit</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlightjs-lua@1.0.0/lua.min.js"></script>
 </head>
 <body>
   <div id="notes"></div>
@@ -61,7 +61,7 @@
       <div id="chat"></div>
       <form id="form">
         <div class="chat-input-wrap">
-          <div id="attachBox" class="attach-box hidden"></div>
+          <div id="attachBox" class="hidden"></div>
           <textarea id="input" rows="1" placeholder="Send a Message..."></textarea>
           <div class="btn-row">
             <button type="button" id="attachBtn" class="icon-mini" title="แนบรูป / ไฟล์">
@@ -74,7 +74,7 @@
               <button type="button" id="plusBtn" class="icon-mini" title="โหมดเสริม">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>
               </button>
-              <div id="plusMenu" class="plus-menu hidden">
+              <div id="plusMenu" class="hidden">
                 <button type="button" id="mThink"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 4 12.7c-.6.5-1 1.4-1 2.3h-6c0-.9-.4-1.8-1-2.3A7 7 0 0 1 12 2z"/><path d="M9 21h6"/></svg><span>Thinking</span></button>
                 <button type="button" id="mWeb"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 0 20 15.3 15.3 0 0 1 0-20z"/></svg><span>Web Search</span></button>
               </div>
@@ -188,5 +188,6 @@
   </div>
 
   <script src="app.js"></script>
+  <script src="app.js?v=109"></script>
 </body>
 </html>
