@@ -1,4 +1,4 @@
-/* CIRCUIT-V111 — ultra-fast typewriter + smart direct answers */
+/* CIRCUIT-V112 — smooth 60fps streaming + fast direct AI */
 const $ = (id) => document.getElementById(id);
 const on = (id, ev, fn) => { const el = $(id); if (el) el.addEventListener(ev, fn); else warnMiss(id); };
 const click = (id, fn) => { const el = $(id); if (el) el.onclick = fn; else warnMiss(id); };
@@ -40,7 +40,9 @@ const esc = (s) => (s || "").replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;","
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const cur = () => chats.find(c => c.id === currentId);
 const nearBottom = () => { const c = $("chat"); return c.scrollHeight - c.scrollTop - c.clientHeight < 150; };
-const scroll = (s = false) => { const c = $("chat"); c.scrollTo({ top: c.scrollHeight, behavior: s ? "smooth" : "auto" }); };
+/* ⭐ scroll แบบนิ่ง: ตามสตรีมใช้ชี้ตรง (ไม่ smooth ที่ตีกับเนื้อหาใหม่) */
+const scroll = (s = false) => { const c = $("chat"); if (s) c.scrollTo({ top: c.scrollHeight, behavior: "smooth" }); else c.scrollTop = c.scrollHeight; };
+const followScroll = () => { if (nearBottom()) { const c = $("chat"); c.scrollTop = c.scrollHeight; } };
 const imgSrc = (img) => typeof img === "string" ? img : (img?.src || "");
 const fmtSize = (b) => b > 1048576 ? (b/1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b/1024)) + " KB";
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -461,14 +463,12 @@ async function run(chat) {
     } catch (err) {
       if (err.name === "AbortError") { lastErr = err; break; }
       lastErr = err;
-      if (attempt === 1) await sleep(500);   /* ⭐ รีไวขึ้น */
+      if (attempt === 1) await sleep(500);
     }
   }
 
   if (full) {
-    shown_final: {
-      renderMD(b, full);
-    }
+    renderMD(b, full);
     chat.messages.push({ role: "assistant", text: full });
     chat.updatedAt = Date.now(); save(); renderSidebar(); updateUsage();
   } else if (lastErr?.name === "AbortError") {
@@ -484,9 +484,12 @@ async function run(chat) {
   scroll();
 }
 
-/* ⭐ streamChat: typewriter ไวมาก (ไล่ตามสตรีมแบบเร่งสปีด ทีละตัวแต่พรืด) */
+/* ⭐⭐⭐ streamChat: พิมพ์ 60fps นิ่งเนียน
+   - ระหว่างพิมพ์ = ข้อความล้วน (เบามาก ไม่กระตุก ไม่มี Markdown รีเรนเดอร์รัว ๆ)
+   - พิมพ์จบ = จัด Markdown สวย ๆ ครั้งเดียว
+   - ไล่ตัวอักษรแบบเร่งสปีด ตามสตรีมตลอด ไม่มีวันล้าหลัง */
 async function streamChat(chat, bubble) {
-  const recent = chat.messages.slice(-20);
+  const recent = chat.messages.slice(-8);
   const msgs = [{ role: "system", content: systemPrompt() }];
   recent.forEach((m, i) => {
     if (m.role === "user") msgs.push(toApi(m, i === recent.length - 1));
@@ -495,7 +498,7 @@ async function streamChat(chat, bubble) {
   const last = msgs.at(-1);
   if (last?.role === "user" && Array.isArray(last.content) && last.content[0]) {
     last.content[0].text +=
-      "\n\n(ลืมไม่ได้: ตอบตรงประเด็น กระชับแต่ฉลาด ไม่ตอบยืดยาวเกินจำเป็น เว้นแต่ผู้ใช้ขอละเอียด ตอบตามภาษาผู้ใช้ ห้ามพูดถึงตัวเอง/ผู้สร้าง/ระบบภายใน เว้นแต่ถูกถาม ห้ามเริ่มด้วย Understood)";
+      "\n\n(สำคัญ: ตอบตรงประเด็นทันที กระชับ ไม่ยืดเยิ่นเกินจำเป็น แต่ครบถ้วนและแม่นยำ ถ้าผู้ใช้ขอละเอียดค่อยขยาย ตอบตามภาษาผู้ใช้ ห้ามพูดถึงตัวเอง/ผู้สร้าง/ระบบภายใน เว้นแต่ถูกถาม ห้ามเริ่มด้วย Understood)";
   }
 
   abortCtl = new AbortController();
@@ -522,13 +525,19 @@ async function streamChat(chat, bubble) {
     }
   }, 3000);
 
-  /* ⭐ typewriter ไวมาก: ทุก 16ms ไล่ตามแบบทบต้น — เห็นพิมพ์ทีละตัวแต่ไม่มีวันล้าหลังสตรีม */
-  const paintTimer = setInterval(() => {
-    if (shown >= full.length) return;
-    shown = Math.min(full.length, shown + Math.max(16, Math.ceil((full.length - shown) / 5)));
-    renderMD(bubble, full.slice(0, shown));
-    if (nearBottom()) scroll();
-  }, 16);
+  /* ⭐ ลูปวาดทุกเฟรม (60fps): พิมพ์ทีละตัวแบบเร่งสปีด นุ่มนิ่งไม่กระตุก */
+  let rafId = 0;
+  const loop = () => {
+    if (shown < full.length) {
+      shown = Math.min(full.length, shown + Math.max(12, Math.ceil((full.length - shown) / 4)));
+      bubble.classList.remove("thinking");
+      bubble.style.whiteSpace = "pre-wrap";        /* ข้อความล้วนยังคงเว้นบรรทัดสวย ๆ */
+      bubble.textContent = full.slice(0, shown);
+      followScroll();
+    }
+    rafId = requestAnimationFrame(loop);
+  };
+  rafId = requestAnimationFrame(loop);
 
   try {
     while (true) {
@@ -545,22 +554,15 @@ async function streamChat(chat, bubble) {
         try {
           const d = JSON.parse(data)?.choices?.[0]?.delta || {};
           if (d.reasoning || d.reasoning_content) reasonBuf += (d.reasoning || d.reasoning_content);
-          const delta = d.content || "";
-          if (delta) {
-            full += delta;
-            bubble.innerHTML = "";
-          }
-          else if (reasonBuf && !full && !bubble.querySelector(".thinking")) {
-            bubble.innerHTML = `<span class="thinking"><i></i><i></i><i></i></span> <small style="color:var(--dim)">Thinking…</small>`;
-          }
+          if (d.content) full += d.content;
         } catch {}
       }
     }
   } finally {
-    clearInterval(paintTimer); clearInterval(watchdog);
+    clearInterval(watchdog);
   }
 
-  if (stalled && !full.trim()) throw new Error("โมเดลนิ่งเกินไป — ลองใหม่อัตโนมัติแล้ว");
+  if (stalled && !full.trim()) { cancelAnimationFrame(rafId); throw new Error("โมเดลนิ่งเกินไป — ลองใหม่อัตโนมัติแล้ว"); }
 
   if (!full) {
     try {
@@ -581,15 +583,23 @@ async function streamChat(chat, bubble) {
     }
   }
   if (!full || !full.trim()) full = reasonBuf;
-  if (!full || !full.trim()) throw new Error("No response — try again.");
+  if (!full || !full.trim()) { cancelAnimationFrame(rafId); throw new Error("No response — try again."); }
 
-  /* ⭐ ช่วงปิดจบ: ไล่ตัวอักษรที่เหลือแบบพรืดเดียวจบ (ยังเห็นเป็นการพิมพ์) */
-  while (shown < full.length) {
-    shown = Math.min(full.length, shown + Math.max(30, Math.ceil((full.length - shown) / 3)));
-    renderMD(bubble, full.slice(0, shown));
-    if (nearBottom()) scroll();
-    await sleep(10);
-  }
+  /* ⭐ ปิดจบ: ไล่ตัวอักษรที่เหลือแบบพรืดเดียวจบ (ยังเห็นการพิมพ์ แต่ไวมาก) */
+  await new Promise(res => {
+    const step = () => {
+      if (shown >= full.length) return res();
+      shown = Math.min(full.length, shown + Math.max(40, Math.ceil((full.length - shown) / 3)));
+      bubble.textContent = full.slice(0, shown);
+      followScroll();
+      requestAnimationFrame(step);
+    };
+    step();
+  });
+  cancelAnimationFrame(rafId);
+
+  /* ⭐ จัด Markdown + ไฮไลต์โค้ด ครั้งเดียวตอนจบ = สวยเหมือนเดิม แต่ไม่กระตุกแล้ว */
+  bubble.style.whiteSpace = "";
   renderMD(bubble, full);
   return full;
 }
