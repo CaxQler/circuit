@@ -474,7 +474,7 @@ app.post("/api/chat", async (req, res) => {
     const needVision = JSON.stringify(messages || []).includes("image_url");
     const maxTokens = Number(CONFIG.maxTokens) || 8000;
 
-    const budget = thinking ? (Number(CONFIG.thinkingBudget) || 10000) : 7000;
+const budget = thinking ? (Number(CONFIG.thinkingBudget) || 8000) : 3500;
 
     let searchBlock = "";
     if (wantWeb) {
