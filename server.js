@@ -49,8 +49,8 @@ function freeFile(base) {
 const pub = (p) => ({ id: p.id, username: p.username, email: p.email || "", avatar: p.avatar || "", avatarUrl: p.avatarUrl || "", theme: p.theme || null, rank: rankOf(p), rankName: RANKS[rankOf(p)].name, rankExpire: p.rankExpire || null });
 const isEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 
-const SUPA_URL = (CONFIG.supaUrl || process.env.SUPA_URL || "").replace(/\/+$/, "");
-const SUPA_KEY = CONFIG.supaKey || process.env.SUPA_KEY || "";
+const SUPA_URL = (CONFIG.supaUrl || process.env.SUPA_URL || process.env.supaUrl || "").replace(/\/+$/, "");
+const SUPA_KEY = CONFIG.supaKey || process.env.SUPA_KEY || process.env.supaKey || "";
 const SH = { apikey: SUPA_KEY, Authorization: "Bearer " + SUPA_KEY, "Content-Type": "application/json" };
 
 function setToken(res, profile) {
