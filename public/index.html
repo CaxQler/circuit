@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Circuit</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
+  <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlightjs-lua@1.0.0/lua.min.js"></script>
+</head>
+<body>
+  <div id="notes"></div>
+
+  <!-- Login / Register -->
+  <div id="auth" class="hidden">
+    <div class="auth-card">
+      <div class="auth-logo"><span class="logo">CIRCUIT</span><span class="by">by BYTELATER</span></div>
+      <div class="tabs">
+        <button id="tabLogin" class="active">Sign in</button>
+        <button id="tabReg">Create account</button>
+      </div>
+      <form id="authForm" novalidate>
+        <input id="a_email" class="reg-only hidden" placeholder="Email (Gmail)" autocomplete="email">
+        <input id="a_user" placeholder="Username" autocomplete="username">
+        <input id="a_pass" type="password" placeholder="Password" autocomplete="current-password">
+        <input id="a_pass2" type="password" class="reg-only hidden" placeholder="Confirm password" autocomplete="new-password">
+        <div id="a_err" class="errbox hidden"></div>
+        <button id="a_submit" class="primary" type="submit">Sign in</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- App -->
+  <div id="app" class="hidden">
+    <div id="sidebar">
+      <div class="brand"><span class="logo">CIRCUIT</span><span class="by">by BYTELATER</span></div>
+      <button id="newChatBtn"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New Chat</button>
+      <nav class="nav">
+        <button class="nav-item active"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Chat</button>
+        <button class="nav-item" id="agentBtn"><svg viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>Agent</button>
+      </nav>
+      <div id="chatList"></div>
+      <button class="side-foot" id="userBtn" title="Settings">
+        <img id="u_av" class="avatar-img hidden">
+        <div class="avatar" id="u_letter">C</div>
+        <div class="who"><span id="u_name">...</span><small id="u_rank">Free</small></div>
+        <svg class="gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+
+    <div id="main">
+      <header>
+        <button id="menuBtn" class="icon-btn" title="Toggle sidebar"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+        <span class="page-title">Circuit</span>
+        <button id="shareBtn"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Share</button>
+      </header>
+      <div id="chat"></div>
+      <form id="form">
+        <div class="chat-input-wrap">
+          <div id="attachBox" class="attach-box hidden"></div>
+          <textarea id="input" rows="1" placeholder="Send a Message..."></textarea>
+          <div class="btn-row">
+            <button type="button" id="attachBtn" class="icon-mini" title="แนบรูป / ไฟล์">
+              <svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            </button>
+            <button type="button" id="cameraBtn" class="icon-mini" title="ถ่ายรูป">
+              <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </button>
+            <div class="plus-wrap">
+              <button type="button" id="plusBtn" class="icon-mini" title="โหมดเสริม">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>
+              </button>
+              <div id="plusMenu" class="plus-menu hidden">
+                <button type="button" id="mThink"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 4 12.7c-.6.5-1 1.4-1 2.3h-6c0-.9-.4-1.8-1-2.3A7 7 0 0 1 12 2z"/><path d="M9 21h6"/></svg><span>Thinking</span></button>
+                <button type="button" id="mWeb"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 0 20 15.3 15.3 0 0 1 0-20z"/></svg><span>Web Search</span></button>
+              </div>
+            </div>
+            <span class="btn-spacer"></span>
+            <button id="stopBtn" type="button" class="hidden" title="หยุด AI">■</button>
+            <button id="sendBtn" type="submit" title="ส่ง"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+          </div>
+          <input type="file" id="fileInput" multiple hidden accept="image/*,.txt,.md,.js,.py,.html,.css,.json,.csv,.xml,.yml">
+          <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
+        </div>
+      </form>
+      <div id="limitbar" class="hidden">
+        <div class="lb-top"><span id="lb_text"></span><span id="lb_rank">Free</span></div>
+        <div class="lb-track"><div class="lb-fill" id="lb_fill"></div></div>
+        <div id="lb_timer" class="hidden"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings: 3 tabs -->
+  <div id="setBg" class="modal-bg hidden">
+    <div class="modal">
+      <div class="m-head"><h2>Settings</h2><button id="setClose" class="icon-btn"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+      <div class="set-tabs">
+        <button id="stabAcc" class="on">Account</button>
+        <button id="stabPrem">Premium</button>
+        <button id="stabGen">General</button>
+      </div>
+
+      <!-- Tab 1: Account -->
+      <div id="secAcc" class="m-sec">
+        <h3>Data &amp; Account</h3>
+        <div class="prof">
+          <div class="av-wrap">
+            <img id="pf_av" class="avatar-img big hidden">
+            <div class="avatar big" id="pf_letter">C</div>
+          </div>
+          <div class="pf-info">
+            <div class="pf-name" id="pf_display">...</div>
+            <div class="pf-rank" id="pf_rank">Free</div>
+          </div>
+        </div>
+        <label class="fld">Username<input id="pf_name"></label>
+        <button id="pf_save" class="btn-ghost">Save profile</button>
+        <input type="file" id="pf_file" accept="image/*" hidden>
+        <button id="pf_photo" class="btn-ghost" style="margin-top:14px">Change photo</button>
+        <h3 style="margin-top:18px">Theme</h3>
+        <div class="themes">
+          <button class="theme-card" data-t="slate"><i class="sw" style="background:linear-gradient(135deg,#111317,#9aa3b2)"></i>Dark Gray</button>
+          <button class="theme-card" data-t="circuit"><i class="sw" style="background:linear-gradient(135deg,#0a060f,#8b5cf6)"></i>Circuit Purple</button>
+          <button class="theme-card" data-t="light"><i class="sw" style="background:linear-gradient(135deg,#f6f7f9,#6b7280)"></i>Light</button>
+          <button class="theme-card" data-t="custom"><i class="sw" style="background:conic-gradient(#ff5f6d,#ffc371,#47cf73,#4f8cff,#b06ab3,#ff5f6d)"></i>Custom</button>
+        </div>
+        <div id="customRow" class="custom-row hidden">
+          <label class="fld">Background<input type="color" id="c_bg" value="#111317"></label>
+          <label class="fld">Panel<input type="color" id="c_panel" value="#181b21"></label>
+          <label class="fld">Accent<input type="color" id="c_ac" value="#9aa3b2"></label>
+          <button id="c_apply" class="btn-ghost">Apply</button>
+        </div>
+        <h3 style="margin-top:18px">Community</h3>
+        <button id="joinDiscordBtn" class="ds-btn">Join our Discord</button>
+        <p class="pp-sub" style="margin-top:8px" data-th="คุยกับชุมชน ถาม-ตอบ และรับข่าวสาร">Chat with the community, ask questions, get news</p>
+        <button id="logoutBtn" class="danger" style="margin-top:18px">Log out</button>
+      </div>
+
+      <!-- Tab 2: Premium -->
+      <div id="secPrem" class="m-sec hidden">
+        <h3>Premium</h3>
+        <div class="set-sub">
+          <button class="on" data-p="daily">Daily</button>
+          <button data-p="weekly">Weekly</button>
+          <button data-p="monthly">Monthly</button>
+          <button data-p="yearly">Yearly</button>
+        </div>
+        <div class="plan-group" data-g="daily">
+          <div class="plan-card big-card"><div class="p-name">Endless</div><div class="p-price">89 THB / 1 day</div><ul><li data-th="แชทไม่จำกัด">Unlimited chat</li><li data-th="ใช้ได้ 1 วันเต็ม">Valid for 1 full day</li></ul></div>
+        </div>
+        <div class="plan-group hidden" data-g="weekly">
+          <div class="plan-card"><div class="p-name">Lil</div><div class="p-price">189 THB / 7 days</div><ul><li data-th="50 แชทต่อวัน">50 messages / day</li></ul></div>
+          <div class="plan-card mod"><div class="p-name">Human</div><div class="p-price">289 THB / 7 days</div><ul><li data-th="100 แชทต่อวัน">100 messages / day</li></ul></div>
+        </div>
+        <div class="plan-group hidden" data-g="monthly">
+          <div class="plan-card"><div class="p-name">Plus</div><div class="p-price">399 THB / 31 days</div><ul><li data-th="199 แชทต่อวัน">199 messages / day</li></ul></div>
+          <div class="plan-card mod"><div class="p-name">Pro</div><div class="p-price">650 THB / 31 days</div><ul><li data-th="399 แชทต่อวัน">399 messages / day</li></ul></div>
+        </div>
+        <div class="plan-group hidden" data-g="yearly">
+          <div class="plan-card"><div class="p-name">Prime</div><div class="p-price">999 THB / 365 days</div><ul><li data-th="600 แชทต่อวัน">600 messages / day</li></ul></div>
+          <div class="plan-card mod"><div class="p-name">Ultra Service</div><div class="p-price">2,400 THB / 365 days</div><ul><li data-th="600 แชทต่อวัน">600 messages / day</li><li data-th="ทุกฟีเจอร์">All features</li></ul></div>
+        </div>
+        <p class="pp-sub" style="margin-top:14px" data-th="มีแพ็กเกจอยู่แล้ว? เติม key ได้เรื่อยๆ วันจะบวกต่อท้ายอัตโนมัติ (แพ็กเกจเดียวกัน)">Already have a plan? Stack more keys — days add up automatically (same plan)</p>
+        <div class="fld" style="margin-top:8px"><span data-th="License key">License key</span><input id="lic_input" placeholder="..." style="display:block;width:100%;margin-top:5px;background:var(--bg);border:1px solid var(--bd);color:var(--tx);border-radius:9px;padding:9px 11px;font-family:monospace;font-size:13.5px"></div>
+        <button id="lic_redeem" class="primary" data-th="Activate license">Activate license</button>
+        <p id="lic_err" class="errbox hidden" style="margin-top:8px"></p>
+      </div>
+
+      <!-- Tab 3: General -->
+      <div id="secGen" class="m-sec hidden">
+        <h3>General</h3>
+        <label class="fld">Language (interface)<select id="g_lang">
+          <option value="en">English</option>
+          <option value="th">Thai</option>
+        </select></label>
+        <label class="fld">Send on Enter
+          <select id="g_enter"><option value="1">On</option><option value="0">Off (Shift+Enter to send)</option></select>
+        </label>
+        <label class="fld">Font size<select id="g_font"><option value="13">Small</option><option value="14.5" selected>Normal</option><option value="16">Large</option></select></label>
+        <button id="g_save" class="btn-ghost">Save general</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
